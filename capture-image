@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+
+usage() { printf "Usage: $0 [-b <BRIGHTNESS>] [-g <GAIN>] [-e <EXPOSURE>] [-S] [-l] [-h] <SERIAL>\n\n\
+Set specified camera properties and make a snapshot.\n\
+Run tcam-ctrl to get serial of your camera, info about properties ranges and more.\n\n\
+Options:\n\
+   -b  set brightness\n\
+   -g  set gain\n\
+   -e  set exposure\n\
+   -S  start live stream, instead of making a snapshot. Video is not saved. This is convenient for calibrating camera properties\n\
+   -l  also list current properties values\n\
+   -h  show help\n\n\
+Examples:\n\
+   $0 -b 10 -g 50 -e 4000 <SERIAL>\n\
+   $0 -e 10000 <SERIAL>\n\
+   $0 -l <SERIAL>\n" 1>&2; exit 1; } 
+
+# Set variables to empty string
+SERIAL=''
+BRIGHT=''
+GAIN=''
+EXP=''
+SHOW_PROPERTIES=''
+LIVE_STREAM=''
+
+if [ -z "$1" ]; then
+    usage
+    exit 1
+fi
+
+# Parse arguments
+# No colon after 'l' and 'h' options here, because they don't expect an argument
+while getopts ":b:g:e:Slh" o; do
+    case "${o}" in
+	b)
+	    BRIGHT=${OPTARG}
+	    ;;
+	g)
+	    GAIN=${OPTARG}
+	    ;;
+	e)
+	    EXP=${OPTARG}
+	    ;;
+	S)
+	    LIVE_STREAM='yes'
+	    ;;
+	l)
+	    SHOW_PROPERTIES='yes'
+	    ;;
+	h)
+	    usage
+	    ;;
+	*)
+	    usage
+	    ;;
+    esac
+done
+
+# Interpret the rest of the cmdline as SERIAL
+shift "$((OPTIND-1))"
+SERIAL=$@
+
+# If argument specified, set corresponding camera property
+if [ -z "$SERIAL" ]; then
+    printf "No serial given!\n" 1>&2; exit 1;
+fi    
+
+if [ ! -z "$BRIGHT" ]; then
+    tcam-ctrl -p -s "Brightness=$BRIGHT" $SERIAL
+fi
+
+if [ ! -z "$GAIN" ]; then
+    tcam-ctrl -p -s "Gain=$GAIN" $SERIAL
+fi
+
+if [ ! -z "$EXP" ]; then
+    tcam-ctrl -p -s "Exposure=$EXP" $SERIAL
+fi    
+
+if [ -z "$BRIGHT" -a -z "$GAIN" -a -z "$EXP" ]; then
+    printf "No properties were changed.\n"
+fi
+
+# Show properties
+if [ ! -z "$SHOW_PROPERTIES" ]; then
+    printf "\nCurrent properties: "
+    tcam-ctrl -p $SERIAL
+fi
+
+if [ ! -z "$LIVE_STREAM" ]; then
+    # Start live stream
+    gst-launch-1.0 tcamsrc serial=12910608 \
+		   ! video/x-bayer \
+		   ! tcamwhitebalance \
+		   ! bayer2rgb \
+		   ! videoconvert \
+		   ! autovideosink
+else
+    # Capture the image
+    printf "\n"
+    gst-launch-1.0 tcamsrc serial=12910608 \
+		   ! video/x-bayer \
+		   ! tcamwhitebalance \
+		   ! bayer2rgb \
+		   ! videoconvert \
+		   ! pngenc snapshot=true \
+		   ! filesink location=snapshot.png
+fi    
