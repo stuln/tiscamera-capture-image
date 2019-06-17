@@ -6,10 +6,16 @@ Feel free to modify this script. More information about TIS SDK can be found on 
 
 ## form-dependencies
 
-This script will form a list of urls to Debian dependencies needed to compile The Imaging Source Linux SDK. It is supposed to be run on a machine without internet connection to obtain the list of packages with versions corresponding to Debian version of this specific machine. Generated list then can be used on a machine with internet connection to download these packages in the following way:
+This script will form a list of urls to Debian dependencies needed to compile The Imaging Source Linux SDK. It is supposed to be run on a machine without internet connection to obtain the list of packages with versions corresponding to Debian version of this specific machine. 
 
 ```
-$ wget --input-file packages.list
+./form-dependencies
+```
+
+Generated list then can be used on a machine with internet connection to download these packages in the following way:
+
+```
+wget --input-file packages.list
 ```
 
 After that just move them to target machine and install.
