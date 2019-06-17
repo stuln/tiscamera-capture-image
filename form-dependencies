@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# This script will form a list of urls to Debian dependencies needed to
+# compile The Imaging Source Linux SDK. It is supposed to be run on a
+# machine without internet connection to obtain the list of packages
+# with versions corresponding to Debian version of this specific machine.
+# Generated list then can be used on a machine with internet connection
+# to download these packages in the following way:
+# $ wget --input-file packages.list
+# After that just move them to target machine and install.
+# Example (assuming that all packages are in the same directory):
+# # dpkg -i *
+
+# COMPILATION DEPENDENDCIES #
+COMPIL_dep="\
+git \
+g++ \
+cmake \
+pkg-config \
+uuid-dev \
+libudev-dev \
+libgstreamer1.0-dev \
+libgstreamer-plugins-base1.0-dev \
+libglib2.0-dev \
+libgirepository1.0-dev \
+libusb-1.0-0-dev \
+libzip-dev \
+python3-setuptools"
+
+# documentation
+DOC_dep="python3-sphinx"
+
+# aravis specific dependencies
+ARAVIS_COMPIL_dep="\
+libxml2-dev \
+autoconf \
+intltool \
+gtk-doc-tools \
+libpcap-dev"
+
+# RUNTIME DEPENDENCIES #
+RUNTIME_dep="\
+libgstreamer1.0-0 \
+gstreamer1.0-tools \
+gstreamer1.0-x \
+gstreamer1.0-plugins-base \
+gstreamer1.0-plugins-good \
+gstreamer1.0-plugins-bad \
+gstreamer1.0-plugins-ugly \
+libxml2 \
+libzip4 \
+libglib2.0-0 \
+libgirepository-1.0-1"
+
+# usb specific dependencies
+USB_dep="\
+libudev1 \
+libusb-1.0-0 \
+libuuid1"
+
+# aravis specific dependendcies
+ARAVIS_RUN_dep="\
+libxml2 \
+libpcap0.8"
+
+# tools specific dependencies
+TOOLS_dep="\
+python3-pyqt5 \
+python3-gi"
+
+apt-get -qq --print-uris install \
+    $COMPIL_dep \
+    $DOC_dep \
+    $ARAVIS_COMPIL_dep \
+    $RUNTIME_dep \
+    $USB_dep \
+    $ARAVIS_RUN_dep \
+    $TOOL_dep \
+| cut -d\' -f2 >packages.list
