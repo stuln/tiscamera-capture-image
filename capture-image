@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
 
-usage() { printf "Usage: $0 [-b <BRIGHTNESS>] [-g <GAIN>] [-e <EXPOSURE>] [-S] [-l] [-h] <SERIAL>\n\n\
+usage() { printf "\
+Usage: $0 [-b <BRIGHTNESS>] [-g <GAIN>] [-e <EXPOSURE>] [-A] [-S] [-l]\n\
+[-h] <SERIAL>\n\n\
 Set specified camera properties and make a snapshot.\n\
-Run tcam-ctrl to get serial of your camera, info about properties ranges and more.\n\n\
+Run tcam-ctrl to get serial of your camera, info about properties ranges and\n\
+more.\n\n\
+When properties are set, their values are saved in the camera and stay the same\n\
+until they are changed again. Properties values have to be set before first\n\
+image capturing, otherwise it might fail.\n\n\
 Options:\n\
    -b  set brightness\n\
    -g  set gain\n\
    -e  set exposure\n\
-   -S  start live stream, instead of making a snapshot. Video is not saved. This is convenient for calibrating camera properties\n\
-   -l  also list current properties values. This cause additional delay before snapshot is captured.\n\
-   -h  show help\n\n\
+   -A  allow automatic gain and exposure correction\n\
+   -S  start live stream, instead of making a snapshot. Video is not saved. This\n\
+is convenient for calibrating camera properties\n\
+   -l  also list current properties values. This cause additional delay before\n\
+snapshot is captured.\n\
+   -h  show this message\n\n\
 Examples:\n\
    $0 -b 10 -g 50 -e 4000 <SERIAL>\n\
    $0 -e 10000 <SERIAL>\n\
@@ -22,6 +31,7 @@ gain=''
 exp=''
 show_props=''
 live_stream=''
+auto_props=''
 
 if [ -z "$1" ]; then
     usage
@@ -30,7 +40,7 @@ fi
 
 # Parse arguments
 # No colon after 'l' and 'h' options here, because they don't expect an argument
-while getopts ":b:g:e:Slh" o; do
+while getopts ":b:g:e:ASlh" o; do
     case "${o}" in
 	b)
 	    bright=${OPTARG}
@@ -40,6 +50,9 @@ while getopts ":b:g:e:Slh" o; do
 	    ;;
 	e)
 	    exp=${OPTARG}
+	    ;;
+	A)
+	    auto_props='yes'
 	    ;;
 	S)
 	    live_stream='yes'
@@ -81,6 +94,7 @@ if [ -z "$bright" -a -z "$gain" -a -z "$exp" ]; then
     printf "No properties were changed.\n"
 fi
 
+
 # Show properties
 if [ ! -z "$show_props" ]; then
     printf "\nCurrent properties: "
@@ -91,20 +105,41 @@ fi
 
 if [ ! -z "$live_stream" ]; then
     # Start live stream
-    gst-launch-1.0 tcamsrc serial=$serial \
-		   ! video/x-bayer \
-		   ! tcamwhitebalance \
-		   ! bayer2rgb \
-		   ! videoconvert \
-		   ! autovideosink
+    if [ ! -z "$auto_props" ]; then
+	gst-launch-1.0 tcamsrc serial=$serial \
+		       ! video/x-bayer \
+		       ! tcamautoexposure \
+		       ! tcamwhitebalance \
+		       ! bayer2rgb \
+		       ! videoconvert \
+		       ! autovideosink
+    else	
+	gst-launch-1.0 tcamsrc serial=$serial \
+		       ! video/x-bayer \
+		       ! tcamwhitebalance \
+		       ! bayer2rgb \
+		       ! videoconvert \
+		       ! autovideosink
+    fi
 else
     # Capture the image
     snapshot_name=$(date +camera-snapshot_%F_%R:%S:%N_%:::z)
-    gst-launch-1.0 tcamsrc serial=$serial \
-		   ! video/x-bayer \
-		   ! tcamwhitebalance \
-		   ! bayer2rgb \
-		   ! videoconvert \
-		   ! pngenc snapshot=true \
-		   ! filesink location="${snapshot_name}.png"
+    if [ ! -z "auto_props" ]; then
+	gst-launch-1.0 tcamsrc serial=$serial \
+		       ! video/x-bayer \
+		       ! tcamautoexposure \
+		       ! tcamwhitebalance \
+		       ! bayer2rgb \
+		       ! videoconvert \
+		       ! pngenc snapshot=true \
+		       ! filesink location="${snapshot_name}.png"
+    else
+	gst-launch-1.0 tcamsrc serial=$serial \
+		       ! video/x-bayer \
+		       ! tcamwhitebalance \
+		       ! bayer2rgb \
+		       ! videoconvert \
+		       ! pngenc snapshot=true \
+		       ! filesink location="${snapshot_name}.png"
+    fi
 fi    
