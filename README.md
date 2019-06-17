@@ -15,10 +15,10 @@ This script will form a list of urls to Debian dependencies needed to compile Th
 Generated list then can be used on a machine with internet connection to download these packages in the following way:
 
 ```
-wget --input-file packages.list
+wget --input-file packages.list -P tis-dependencies
 ```
 
-After that just move them to target machine and install.
+This will download all needed .deb packages in the directory "tis-dependencies". After that just move it to target machine and install packages.
 
 ```
 # Assuming that all packages are in the same directory
