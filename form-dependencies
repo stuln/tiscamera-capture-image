@@ -72,5 +72,4 @@ apt-get -qq --print-uris install \
     $RUNTIME_dep \
     $USB_dep \
     $ARAVIS_RUN_dep \
-    $TOOL_dep \
 | cut -d\' -f2 >packages.list
