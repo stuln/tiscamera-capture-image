@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
 usage() { printf "\
-Usage: $0 [-b <BRIGHTNESS>] [-g <GAIN>] [-e <EXPOSURE>] [-A] [-S] [-l]\n\
-[-h] <SERIAL>\n\n\
+Usage: $0 [-b <BRIGHTNESS>] [-g <GAIN>] [-e <EXPOSURE>] [-A] [-S]\n\
+[-v] <SERIAL>\n\n\
 Set specified camera properties and make a snapshot.\n\
 Run tcam-ctrl to get serial of your camera, info about properties ranges and\n\
-more.\n\n\
-When properties are set, their values are saved in the camera and stay the same\n\
-until they are changed again. Properties values have to be set before first\n\
-image capturing, otherwise it might fail.\n\n\
+more.\n\
+
+When properties are set, their values are saved and stay the same until they\n\
+are changed again. If there are no saved values and they are not specified\n\
+explicitly, error will occur, so they have to be set before first image capturing.\n\n\
 Options:\n\
    -b  set brightness\n\
    -g  set gain\n\
@@ -16,13 +17,12 @@ Options:\n\
    -A  allow automatic gain and exposure correction\n\
    -S  start live stream, instead of making a snapshot. Video is not saved. This\n\
 is convenient for calibrating camera properties\n\
-   -l  also list current properties values. This cause additional delay before\n\
-snapshot is captured.\n\
-   -h  show this message\n\n\
+   -v  also list current properties values. This cause additional delay before\n\
+snapshot is captured.\n\n\
 Examples:\n\
    $0 -b 10 -g 50 -e 4000 <SERIAL>\n\
    $0 -e 10000 <SERIAL>\n\
-   $0 -l <SERIAL>\n" 1>&2; exit 1; } 
+   $0 -v <SERIAL>\n" 1>&2; exit 1; } 
 
 # Set variables to empty string
 serial=''
@@ -40,7 +40,7 @@ fi
 
 # Parse arguments
 # No colon after 'l' and 'h' options here, because they don't expect an argument
-while getopts ":b:g:e:ASlh" o; do
+while getopts ":b:g:e:ASv" o; do
     case "${o}" in
 	b)
 	    bright=${OPTARG}
@@ -57,11 +57,8 @@ while getopts ":b:g:e:ASlh" o; do
 	S)
 	    live_stream='yes'
 	    ;;
-	l)
+	v)
 	    show_props='yes'
-	    ;;
-	h)
-	    usage
 	    ;;
 	*)
 	    usage

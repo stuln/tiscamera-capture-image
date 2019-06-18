@@ -62,10 +62,8 @@ ARAVIS_RUN_dep="\
 libxml2 \
 libpcap0.8"
 
-# tools specific dependencies
-TOOLS_dep="\
-python3-pyqt5 \
-python3-gi"
+## RECURSIVE DEPENDENCIES 1 #
+REC_dep_1=""
 
 apt-get -qq --print-uris install \
     $COMPIL_dep \
