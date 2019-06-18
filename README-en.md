@@ -6,8 +6,6 @@ Feel free to modify this script. More information about TIS SDK can be found on 
 
 ## form-dependencies
 
-**NOTE:** if a machine without internet connection is not really up-to-date, required package versions may be already removed from repositories. Then wget will not download some of the packages and you will end up with broken dependencies. Make sure that there are no 404 Not Found errors in wget output.
-
 This script will form a list of urls to Debian dependencies needed to compile The Imaging Source Linux SDK. It is supposed to be run on a machine without internet connection to obtain the list of packages with versions corresponding to Debian version of this specific machine. Generated list then can be used on a machine with internet connection to download these packages in the following way:
 
 ```
@@ -21,3 +19,4 @@ After that just move them to target machine and install.
 sudo dpkg -i *
 ```
 
+**NOTE: if a machine that runs this script is not really up-to-date, required package versions may be already removed from repositories. Then wget will not download some of the packages and after you run ```dpkg -i``` you will end up with broken dependencies! Make sure that there are no 404 Not Found errors in wget output.**
